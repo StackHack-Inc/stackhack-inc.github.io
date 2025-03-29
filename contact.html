@@ -1,0 +1,232 @@
+---
+layout: default
+permalink: /contact
+title: Contact
+description: Contact StackHack at info@stackhack.ca or visit us at 2967 Dundas St W #679, Toronto, Ontario, Canada.
+image: /images/contact-image.jpg
+custom_styles: |
+    <style>
+        /* Image Section */
+        .image-container {
+            position: relative;
+            width: 100vw;
+            height: 70vh;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            animation: zoomIn 2s ease forwards;
+        }
+
+        .image-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+            z-index: 1;
+        }
+
+        .image-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+            opacity: 0;
+            animation: slideInFromTop 1.5s ease forwards;
+        }
+
+        .image-text h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .image-text span {
+            font-size: 1.5rem;
+            font-weight: 300;
+            margin-top: 10px;
+        }
+
+        /* Animations */
+        @keyframes zoomIn {
+            0% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInFromTop {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -100%);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        /* Map Section */
+        .map-container {
+            width: 100%;
+            height: 40vh;
+            position: relative;
+            overflow: hidden;
+            background-color: #f8f9fa;
+            margin-top: -2px;
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            position: relative;
+            z-index: 2;
+            filter: grayscale(100%) brightness(1.2);
+        }
+
+        /* Contact Info Section */
+        .content {
+            max-width: 600px;
+            margin: 0 auto !important;
+            text-align: center !important;
+            width: 100%;
+        }
+
+        .contact-info {
+            margin: 0 auto !important;
+            padding: 20px;
+        }
+
+        .contact-info p {
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: 400;
+            margin: 5px auto;
+            position: relative;
+            padding-left: 30px;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 0.5s;
+            display: inline-block;
+            text-align: left;
+        }
+
+        .contact-info p i {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #225d89;
+            font-size: 1.2rem;
+        }
+
+        /* LinkedIn Button */
+        .linkedin-button {
+            margin: 20px 0 50px;
+            width: 100%;
+            text-align: center !important;
+        }
+
+        .linkedin-button a {
+            background-color: #0077b5;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 400;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 0.7s;
+            display: inline-block;
+        }
+
+        .linkedin-button a:hover {
+            background-color: #225d89;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .image-container {
+                height: 60vh;
+            }
+
+            .image-text h2 {
+                font-size: 2.5rem;
+            }
+
+            .image-text span {
+                font-size: 1.2rem;
+            }
+
+            .map-container {
+                height: 30vh;
+            }
+
+            .contact-info p {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+---
+<!-- Contact Image with Text Overlay -->
+<div class="image-container">
+    <img src="images/contact-image.jpg" alt="Contact Background">
+    <div class="image-text" style="white-space: nowrap; font-size: 2.5rem; max-width: 90%;">
+        <h2>Get in Touch</h2>
+        <span>info@stackhack.ca</span>
+    </div>
+</div>
+
+<!-- Google Map Section -->
+<div class="map-container">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2886.378614614614!2d-79.47023768450067!3d43.66543816314432!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882b34d5f5b5b5b5%3A0x5b5b5b5b5b5b5b5b!2s2967%20Dundas%20St%20W%20%23679%2C%20Toronto%2C%20ON%20M6P%201Z2%2C%20Canada!5e0!3m2!1sen!2sus!4v1696112345678!5m2!1sen!2sus" 
+            width="100%" 
+            height="100%" 
+            style="border:0;" 
+            allowfullscreen="" 
+            loading="lazy" 
+            title="Map of StackHack Location at 2967 Dundas St W #679, Toronto"
+            referrerpolicy="no-referrer-when-downgrade">
+    </iframe>
+</div>
+
+<!-- Contact Info Section -->
+<section>
+    <div class="content contact-info">
+        <p><i class="fas fa-map-marker-alt"></i> 2967 Dundas St W #679 Toronto</p>
+        <p><i class="fas fa-flag"></i> Ontario Canada</p>
+        <p><i class="fas fa-phone"></i> Tel: +1 647-948-9719</p>
+    </div>
+    <div class="linkedin-button">
+        <a href="https://www.linkedin.com/company/76913219" target="_blank">LinkedIn</a>
+    </div>
+</section>

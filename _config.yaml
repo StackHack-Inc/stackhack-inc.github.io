@@ -1,0 +1,7 @@
+title: StackHack
+description: A blog about Cloud, DevOps, Automation, and Kubernetes
+baseurl: ""
+url: "https://yourusername.github.io"
+theme: minima
+plugins:
+  - jekyll-feed

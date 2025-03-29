@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Using cert-manager with Venafi on OpenShift - StackHack</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Add favicon link -->
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <style>
+        .custom-hr {
+            border: 1.5px solid black;
+            width: 40%;
+            margin: 15px auto;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100vw;
+            height: 50vh;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            filter: brightness(0.8);
+            transition: transform 0.3s ease, filter 0.3s ease;
+        }
+
+        .image-container:hover {
+            transform: scale(1.02);
+        }
+
+        .image-container:hover img {
+            filter: brightness(1);
+        }
+
+        .image-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+            z-index: 1;
+        }
+
+        .image-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+            z-index: 2;
+        }
+
+        .logo-container {
+            background-color: transparent !important;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .logo-container img {
+            mix-blend-mode: multiply;
+            height: 80px;
+            display: inline-block;
+        }
+
+        /* Updated CSS for blog post content images */
+        .container img {
+            max-width: 30%;
+            height: auto;
+            display: block;
+            margin: 20px auto; /* Added margin for spacing */
+            border: 2px solid #333; /* Subtle border */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+            transform: rotate(-2deg); /* Slight tilt for a playful look */
+            transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition for hover effects */
+        }
+
+        .container img:hover {
+            transform: scale(1.05) rotate(0deg); /* Zoom in and straighten on hover */
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3); /* Enhanced shadow on hover */
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <!-- Logo -->
+    <!-- Logo -->
+    <div class="logo-container w-100">
+        <a href="https://stackhack.ca">
+            <img src="/images/logo.png" alt="Logo">
+        </a>
+    </div>
+
+    <!-- Horizontal Line -->
+    <hr class="custom-hr">
+
+    <!-- Navigation -->
+    <nav class="text-center py-3">
+        <a href="/home.html" class="mx-3 text-dark text-decoration-none fw-bold">Home</a>
+        <a href="/about.html" class="mx-3 text-dark text-decoration-none fw-bold">About</a>
+        <a href="/blog.html" class="mx-3 text-dark text-decoration-none fw-bold">Blog</a>
+        <a href="/contact.html" class="mx-3 text-dark text-decoration-none fw-bold">Contact</a>
+    </nav>
+
+    <!-- First Image with Text Overlay -->
+    <div class="image-container">
+        <img src="/images/earth-image.jpg" alt="NASA Image">
+        <div class="image-text">STΛCKHΛCK</div>
+    </div>
+
+    <!-- Post Content -->
+    <div class="container py-5">
+        <h1>Using cert-manager with Venafi on OpenShift</h1>
+        <p class="text-muted">May 18, 2021</p>
+        <div><p><img src="/images/certificate.jpg" alt="" /></p>
+
+<hr />
+<p>A couple of years ago at a meetup I talked about using cert-manager on OpenShift. At the time I used the Kubernetes Ingress object with cert-manager as it is directly supported by cert-manager. Unfortunately, OpenShift Routes are not supported by cert-manager even though someone made a PR to support them.</p>
+
+<p>Fortunately for the OpenShift community this PR led to the creation of cert-utils-operator which patches OpenShift Routes with the Certificate generated from cert-manager.</p>
+
+<p>ALL OF THIS because OpenShift Routes do not support TLS via k8s secrets.</p>
+
+<p>I will also be using Venafi Cloud as the CA for this integration. Venafi has a pretty awesome API and it offers a wide variety of integrations which also includes a Terraform provider.</p>
+
+<p>Now, with that out of the way, I’m going to write about how to configure cert-manager with Venafi for OpenShift routes with the help of the cert-utils-operator.</p>
+
+<h2 id="install-cert-manager">Install cert-manager</h2>
+
+<p>The installation of cert-manager is pretty straightforward. Just do this:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create namespace cert-manager
+oc apply <span class="nt">-f</span> https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+</code></pre></div></div>
+
+<h2 id="install-cert-utils-operator">Install cert-utils-operator</h2>
+
+<p>I installed it via Helm:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc new-project cert-utils-operator
+helm repo add cert-utils-operator https://redhat-cop.github.io/cert-utils-operator
+helm repo update
+helm <span class="nb">install </span>cert-utils-operator cert-utils-operator/cert-utils-operator
+</code></pre></div></div>
+
+<h2 id="setting-up-venafi-cloud-for-cert-manager">Setting up Venafi Cloud for cert-manager</h2>
+
+<p>There’s a series of easy steps that need to be done as prerequisites for the cert-manager integration. Steps for Venafi TPP are quite similar.</p>
+
+<h3 id="create-an-issuing-template">Create an Issuing Template</h3>
+
+<p>Click on <strong>Settings -&gt; Issuing Templates -&gt; Create a new Issuing Template</strong>.</p>
+
+<p>I went with the default Venafi built-in CA.</p>
+
+<h3 id="create-an-application">Create an Application</h3>
+
+<p>Create a new Application by navigating to <strong>Organizations -&gt; Applications</strong>. Choose the previously created Issuing Template when creating it.</p>
+
+<h3 id="get-api-keys">Get API keys</h3>
+
+<p>Next, grab API keys to create them with a Kubernetes secret. Go to the newly created Application and click on <strong>API tools -&gt; Kubernetes</strong>. You will see the <code class="language-plaintext highlighter-rouge">kubectl</code> command auto-generated with the API token.</p>
+
+<h2 id="configure-cert-manager">Configure cert-manager</h2>
+
+<h3 id="create-the-secret">Create the Secret</h3>
+
+<p>Copy the command to create the Kubernetes secret. Create it in the namespace where certs are needed. I create them in a namespace called <code class="language-plaintext highlighter-rouge">weather</code>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create secret generic venafi-cloud-secret <span class="se">\</span>
+ <span class="nt">--namespace</span><span class="o">=</span><span class="s1">'weather'</span> <span class="se">\</span>
+ <span class="nt">--from-literal</span><span class="o">=</span><span class="nv">apikey</span><span class="o">=</span><span class="s1">'your_api_key'</span>
+</code></pre></div></div>
+
+<h3 id="create-the-issuer">Create the Issuer</h3>
+
+<p>Create the Issuer for Venafi Cloud in the namespace where the certs are needed. You can also create a ClusterIssuer to make things more automated.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">cert-manager.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Issuer</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">venafi-cloud-issuer</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">venafi</span><span class="pi">:</span>
+    <span class="na">zone</span><span class="pi">:</span> <span class="s2">"</span><span class="s">certmanager</span><span class="se">\\</span><span class="s">cert-manager-it"</span>
+    <span class="na">cloud</span><span class="pi">:</span>
+      <span class="na">apiTokenSecretRef</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">venafi-cloud-secret</span>
+        <span class="na">key</span><span class="pi">:</span> <span class="s">apikey</span>
+</code></pre></div></div>
+
+<p>Apply the Issuer configuration:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> issuer.yaml <span class="nt">-n</span> weather
+</code></pre></div></div>
+
+<h3 id="create-the-certificate">Create the Certificate</h3>
+
+<p>Create the certificate to reference the issuer:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">cert-manager.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Certificate</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">weather-certificate</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">secretName</span><span class="pi">:</span> <span class="s">weather-certificate</span>
+  <span class="na">commonName</span><span class="pi">:</span> <span class="s">weather.apps.ocp.stackhack.ca</span>
+  <span class="na">dnsNames</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">weather.apps.ocp.stackhack.ca</span>
+  <span class="na">issuerRef</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">venafi-cloud-issuer</span>
+</code></pre></div></div>
+
+<p>Apply the Certificate configuration:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> certificate.yaml <span class="nt">-n</span> weather
+</code></pre></div></div>
+
+<p>Once the certificate is created, it should automatically generate the secret containing the certificate:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get secrets <span class="nt">-n</span> weather | <span class="nb">grep </span>weather
+</code></pre></div></div>
+
+<p>Example output:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>weather-tls          kubernetes.io/tls          3          5s
+</code></pre></div></div>
+
+<p>If you’ve made it thus far, everything is good to go to inject this secret into the Route.</p>
+
+<h2 id="create-the-route">Create the Route</h2>
+
+<p>Finally, let’s create the Route to automatically inject the TLS cert from the secret. Note the annotations here. This is where <code class="language-plaintext highlighter-rouge">cert-utils-operator</code> comes into play to inject the secret into the Route. This will not work without these annotations on OpenShift Routes.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">route.openshift.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Route</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">cert-utils-operator.redhat-cop.io/certs-from-secret</span><span class="pi">:</span> <span class="s">weather-tls</span>
+    <span class="na">cert-utils-operator.redhat-cop.io/inject-CA</span><span class="pi">:</span> <span class="s2">"</span><span class="s">false"</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">weather-app</span>
+    <span class="na">app.kubernetes.io/component</span><span class="pi">:</span> <span class="s">weather-app</span>
+    <span class="na">app.kubernetes.io/instance</span><span class="pi">:</span> <span class="s">weather-app</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">weather</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">host</span><span class="pi">:</span> <span class="s">weather.apps.ocp.stackhack.ca</span>
+  <span class="na">port</span><span class="pi">:</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="s">8080-tcp</span>
+  <span class="na">tls</span><span class="pi">:</span>
+    <span class="na">insecureEdgeTerminationPolicy</span><span class="pi">:</span> <span class="s">None</span>
+    <span class="na">termination</span><span class="pi">:</span> <span class="s">edge</span>
+  <span class="na">to</span><span class="pi">:</span>
+    <span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">weather-app</span>
+    <span class="na">weight</span><span class="pi">:</span> <span class="m">100</span>
+  <span class="na">wildcardPolicy</span><span class="pi">:</span> <span class="s">None</span>
+</code></pre></div></div>
+
+<p>Apply the Route configuration:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> route.yaml <span class="nt">-n</span> weather
+</code></pre></div></div>
+
+<h2 id="verify-the-certificate">Verify the Certificate</h2>
+
+<p>Navigate to the URL and check out the cert.</p>
+
+<p>Expand the cert to make sure it’s the right CA.</p>
+
+<p>Let me know if there are any questions!</p>
+
+<p>The code used in the blog is available in this repo.</p>
+</div>
+    </div>
+
+    <!-- "Get in Touch" Section -->
+    <div class="container-fluid p-0 position-relative image-container" style="width: 100vw; height: 40vh; overflow: hidden;">
+        <img src="/images/moon-image.jpg" class="w-100 h-100 object-fit-cover" alt="Second Image">
+        <div class="image-text" style="text-align: left; display: flex; flex-direction: column; align-items: flex-start; padding-left: 20px;">
+            <h3 style="font-weight: bold; font-size: 2rem; margin: 0;">Get in Touch</h3>
+            <div style="font-weight: 300; font-size: 1.2rem; margin-left: 4px;">info@stackhack.ca</div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-3 mt-5">
+        © 2025 by StackHack Inc.
+    </footer>
+</body>
+</html>

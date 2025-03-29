@@ -1,0 +1,301 @@
+---
+layout: default
+permalink: /about
+title: About Us
+description: Learn about StackHack, a company specializing in Cloud, DevOps, Automation, and Kubernetes solutions.
+image: /images/stars-image.jpg
+custom_styles: |
+    <style>
+        section {
+            width: 100%;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center !important;
+        }
+
+        .content {
+            max-width: 600px;
+            margin: 0 auto !important;
+            text-align: center !important;
+            width: 100%;
+        }
+
+        /* Image Section */
+        .image-section {
+            position: relative;
+            width: 100%;
+            height: 80vh;
+            background-color: black;
+            overflow: hidden;
+        }
+
+        .image-section img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            animation: zoomIn 2s ease forwards;
+        }
+
+        .image-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+            z-index: 1;
+        }
+
+        .image-text {
+            position: absolute;
+            top: 18%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 4rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+            z-index: 2;
+            opacity: 0;
+            animation: slideInFromTop 1.5s ease forwards;
+        }
+
+        @keyframes zoomIn {
+            0% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInFromTop {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -100%);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        /* Expertise Section */
+        .content h2 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: slideIn 1s ease forwards 0.5s;
+        }
+
+        .expertise-item {
+            margin-bottom: 40px;
+        }
+
+        .expertise-item h3 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #225d89;
+            position: relative;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 1s;
+        }
+
+        .expertise-item h3::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background: #225d89;
+            margin: 10px auto;
+        }
+
+        .expertise-item p {
+            font-size: 1.2rem;
+            color: #666;
+            font-weight: 400;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 1.2s;
+        }
+
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Work Together Section */
+        .work-together {
+            background: linear-gradient(135deg, #000000 0%, #ffffff 100%);
+            color: white;
+            padding: 50px 20px;
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.5;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards 1.5s;
+            text-align: center !important;
+        }
+
+        .work-together::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('/images/stars-image.jpg') no-repeat center center/cover;
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .work-together span {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Contact Info Section */
+        .contact-info {
+            margin: 0 auto !important;
+        }
+
+        .contact-info p {
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: 400;
+            margin: 5px auto;
+            position: relative;
+            padding-left: 30px;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards;
+            animation-delay: 2s;
+            display: inline-block;
+            text-align: left;
+        }
+
+        .contact-info p i {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #225d89;
+            font-size: 1.2rem;
+        }
+
+        /* LinkedIn Button */
+        .linkedin-button {
+            margin: 20px 0 50px;
+            width: 100%;
+            text-align: center !important;
+        }
+
+        .linkedin-button a {
+            background-color: #225d89;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 400;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            opacity: 0;
+            animation: fadeIn 1s ease forwards 2.2s;
+            display: inline-block;
+        }
+
+        .linkedin-button a:hover {
+            background-color: #225d89;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .image-section {
+                height: 60vh;
+            }
+
+            .image-text {
+                font-size: 2.5rem;
+            }
+
+            .content h2 {
+                font-size: 2.5rem;
+            }
+
+            .expertise-item h3 {
+                font-size: 1.5rem;
+            }
+
+            .expertise-item p {
+                font-size: 1rem;
+            }
+
+            .work-together {
+                font-size: 2rem;
+                padding: 30px 15px;
+            }
+
+            .contact-info p {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+---
+<!-- Image Section -->
+<section class="image-section">
+    <img src="images/stars-image.jpg" alt="Starry Background">
+    <div class="image-text">About Us</div>
+</section>
+
+<!-- Expertise Section -->
+<section>
+    <div class="content">
+        <h2>Our<br>Expertise</h2>
+        <div class="expertise-item">
+            <h3>Cloud</h3>
+            <p>Adopt cloud faster</p>
+        </div>
+        <div class="expertise-item">
+            <h3>Automation and DevOps</h3>
+            <p>Automate deployments faster</p>
+        </div>
+        <div class="expertise-item">
+            <h3>Kubernetes and Containers</h3>
+            <p>Make your applications portable</p>
+        </div>
+    </div>
+</section>
+
+<!-- Work Together Section -->
+<section class="work-together">
+    <div class="content">
+        <span>Let's<br>Work<br>Together</span>
+    </div>
+</section>
+
+<!-- Contact Info Section -->
+<section>
+    <div class="content contact-info">
+        <p><i class="fas fa-map-marker-alt"></i> 2967 Dundas St W #679 Toronto</p>
+        <p><i class="fas fa-flag"></i> Ontario Canada</p>
+        <p><i class="fas fa-envelope"></i> Email: info@stackhack.ca</p>
+        <p><i class="fas fa-phone"></i> Tel: +1 647-948-9719</p>
+    </div>
+    <div class="linkedin-button">
+        <a href="https://www.linkedin.com/company/76913219" target="_blank">LinkedIn</a>
+    </div>
+</section>

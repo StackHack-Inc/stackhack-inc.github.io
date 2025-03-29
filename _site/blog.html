@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Read the latest blog posts from StackHack about Cloud, DevOps, Automation, and Kubernetes.">
+    <meta property="og:title" content="Blog - StackHack">
+    <meta property="og:description" content="Read the latest blog posts from StackHack about Cloud, DevOps, Automation, and Kubernetes.">
+    <meta property="og:image" content="/images/blog-header.jpg">
+    <meta property="og:url" content="https://ahambrar.github.io/blog">
+    <title>Blog - StackHack</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center !important;
+            font-weight: 400;
+        }
+
+        .logo-container {
+            background-color: transparent !important;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .logo-container img {
+            mix-blend-mode: multiply;
+            height: 80px;
+            display: inline-block;
+        }
+
+        .custom-hr {
+            border: 1.5px solid black;
+            width: 40%;
+            margin: 15px auto;
+        }
+
+        footer {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 400;
+            padding: 20px 0;
+            width: 100%;
+            text-align: center !important;
+        }
+    </style>
+    <style>
+    /* Blog Header Image Section */
+    .blog-header {
+        position: relative;
+        width: 100vw;
+        height: 50vh;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .blog-header img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: brightness(0.8);
+        animation: zoomIn 2s ease forwards;
+        transition: filter 0.3s ease;
+    }
+
+    .blog-header:hover {
+        transform: scale(1.02);
+    }
+
+    .blog-header:hover img {
+        filter: brightness(1);
+    }
+
+    .blog-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5));
+        z-index: 1;
+    }
+
+    .blog-header .image-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
+        z-index: 2;
+        opacity: 0;
+        animation: slideInFromTop 1.5s ease forwards;
+    }
+
+    /* Animations */
+    @keyframes zoomIn {
+        0% {
+            transform: scale(1.2);
+            opacity: 0;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideInFromTop {
+        0% {
+            opacity: 0;
+            transform: translate(-50%, -100%);
+        }
+        100% {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+    }
+
+    /* Blog List */
+    .card-img-top {
+        height: 200px;
+        object-fit: cover;
+    }
+
+    /* Custom Button */
+    .btn-custom {
+        background-color: #225d89;
+        border-color: #225d89;
+        color: white;
+        font-weight: 400;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .btn-custom:hover {
+        background-color: #5a32a3;
+        border-color: #5a32a3;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .card-text {
+        font-size: 1rem;
+        color: #666;
+        font-weight: 400;
+    }
+
+    .card-footer {
+        font-size: 0.9rem;
+        font-weight: 400;
+        color: #666;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .blog-header {
+            height: 40vh;
+        }
+
+        .blog-header .image-text {
+            font-size: 2rem;
+        }
+
+        .card-img-top {
+            height: 150px;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+        }
+
+        .card-text {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+</head>
+<body class="bg-light">
+    <!-- Logo -->
+    <div class="logo-container w-100">
+        <a href="https://stackhack.ca">
+            <img src="/images/logo.png" alt="StackHack Logo">
+        </a>
+    </div>
+
+    <!-- Horizontal Line -->
+    <hr class="custom-hr">
+
+    <!-- Navigation -->
+    <nav class="text-center py-3">
+        <a href="/home" class="mx-3 text-dark text-decoration-none fw-bold">Home</a>
+        <a href="/about" class="mx-3 text-dark text-decoration-none fw-bold">About</a>
+        <a href="/blog" class="mx-3 text-dark text-decoration-none fw-bold">Blog</a>
+        <a href="/contact" class="mx-3 text-dark text-decoration-none fw-bold">Contact</a>
+    </nav>
+
+    <!-- Page Content -->
+    <!-- Blog Header Image with Overlay -->
+<div class="blog-header">
+    <img src="/images/blog-header.jpg" alt="Blog Header Image">
+    <div class="image-text">Blog</div>
+</div>
+
+<!-- Blog List -->
+<div class="container py-5">
+    <div class="row">
+        
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                
+                <img src="/images/certificate.jpg" class="card-img-top" alt="Using cert-manager with Venafi on OpenShift Thumbnail">
+                
+                <div class="card-body">
+                    <h2 class="card-title">Using cert-manager with Venafi on OpenShift</h2>
+                    <p class="card-text">
+</p>
+                    <a href="/2021/05/18/using-cert-manager-with-venafi-on-openshift.html" class="btn btn-custom">Read More</a>
+                </div>
+                <div class="card-footer text-muted">
+                    May 18, 2021
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+    <!-- Footer -->
+    <footer class="text-center py-3 mt-5">
+        © 2025 by StackHack Inc.
+    </footer>
+</body>
+</html>

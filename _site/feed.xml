@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.4.1">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2025-03-23T16:19:52-04:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">StackHack</title><subtitle>A blog about Cloud, DevOps, Automation, and Kubernetes</subtitle><entry><title type="html">Using cert-manager with Venafi on OpenShift</title><link href="http://localhost:4000/2021/05/18/using-cert-manager-with-venafi-on-openshift.html" rel="alternate" type="text/html" title="Using cert-manager with Venafi on OpenShift" /><published>2021-05-18T00:00:00-04:00</published><updated>2021-05-18T00:00:00-04:00</updated><id>http://localhost:4000/2021/05/18/using-cert-manager-with-venafi-on-openshift</id><content type="html" xml:base="http://localhost:4000/2021/05/18/using-cert-manager-with-venafi-on-openshift.html"><![CDATA[<p><img src="/images/certificate.jpg" alt="" /></p>
+
+<hr />
+<p>A couple of years ago at a meetup I talked about using cert-manager on OpenShift. At the time I used the Kubernetes Ingress object with cert-manager as it is directly supported by cert-manager. Unfortunately, OpenShift Routes are not supported by cert-manager even though someone made a PR to support them.</p>
+
+<p>Fortunately for the OpenShift community this PR led to the creation of cert-utils-operator which patches OpenShift Routes with the Certificate generated from cert-manager.</p>
+
+<p>ALL OF THIS because OpenShift Routes do not support TLS via k8s secrets.</p>
+
+<p>I will also be using Venafi Cloud as the CA for this integration. Venafi has a pretty awesome API and it offers a wide variety of integrations which also includes a Terraform provider.</p>
+
+<p>Now, with that out of the way, I’m going to write about how to configure cert-manager with Venafi for OpenShift routes with the help of the cert-utils-operator.</p>
+
+<h2 id="install-cert-manager">Install cert-manager</h2>
+
+<p>The installation of cert-manager is pretty straightforward. Just do this:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc create namespace cert-manager
+oc apply <span class="nt">-f</span> https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+</code></pre></div></div>
+
+<h2 id="install-cert-utils-operator">Install cert-utils-operator</h2>
+
+<p>I installed it via Helm:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>oc new-project cert-utils-operator
+helm repo add cert-utils-operator https://redhat-cop.github.io/cert-utils-operator
+helm repo update
+helm <span class="nb">install </span>cert-utils-operator cert-utils-operator/cert-utils-operator
+</code></pre></div></div>
+
+<h2 id="setting-up-venafi-cloud-for-cert-manager">Setting up Venafi Cloud for cert-manager</h2>
+
+<p>There’s a series of easy steps that need to be done as prerequisites for the cert-manager integration. Steps for Venafi TPP are quite similar.</p>
+
+<h3 id="create-an-issuing-template">Create an Issuing Template</h3>
+
+<p>Click on <strong>Settings -&gt; Issuing Templates -&gt; Create a new Issuing Template</strong>.</p>
+
+<p>I went with the default Venafi built-in CA.</p>
+
+<h3 id="create-an-application">Create an Application</h3>
+
+<p>Create a new Application by navigating to <strong>Organizations -&gt; Applications</strong>. Choose the previously created Issuing Template when creating it.</p>
+
+<h3 id="get-api-keys">Get API keys</h3>
+
+<p>Next, grab API keys to create them with a Kubernetes secret. Go to the newly created Application and click on <strong>API tools -&gt; Kubernetes</strong>. You will see the <code class="language-plaintext highlighter-rouge">kubectl</code> command auto-generated with the API token.</p>
+
+<h2 id="configure-cert-manager">Configure cert-manager</h2>
+
+<h3 id="create-the-secret">Create the Secret</h3>
+
+<p>Copy the command to create the Kubernetes secret. Create it in the namespace where certs are needed. I create them in a namespace called <code class="language-plaintext highlighter-rouge">weather</code>:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl create secret generic venafi-cloud-secret <span class="se">\</span>
+ <span class="nt">--namespace</span><span class="o">=</span><span class="s1">'weather'</span> <span class="se">\</span>
+ <span class="nt">--from-literal</span><span class="o">=</span><span class="nv">apikey</span><span class="o">=</span><span class="s1">'your_api_key'</span>
+</code></pre></div></div>
+
+<h3 id="create-the-issuer">Create the Issuer</h3>
+
+<p>Create the Issuer for Venafi Cloud in the namespace where the certs are needed. You can also create a ClusterIssuer to make things more automated.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">cert-manager.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Issuer</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">venafi-cloud-issuer</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">venafi</span><span class="pi">:</span>
+    <span class="na">zone</span><span class="pi">:</span> <span class="s2">"</span><span class="s">certmanager</span><span class="se">\\</span><span class="s">cert-manager-it"</span>
+    <span class="na">cloud</span><span class="pi">:</span>
+      <span class="na">apiTokenSecretRef</span><span class="pi">:</span>
+        <span class="na">name</span><span class="pi">:</span> <span class="s">venafi-cloud-secret</span>
+        <span class="na">key</span><span class="pi">:</span> <span class="s">apikey</span>
+</code></pre></div></div>
+
+<p>Apply the Issuer configuration:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> issuer.yaml <span class="nt">-n</span> weather
+</code></pre></div></div>
+
+<h3 id="create-the-certificate">Create the Certificate</h3>
+
+<p>Create the certificate to reference the issuer:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">cert-manager.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Certificate</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">weather-certificate</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">secretName</span><span class="pi">:</span> <span class="s">weather-certificate</span>
+  <span class="na">commonName</span><span class="pi">:</span> <span class="s">weather.apps.ocp.stackhack.ca</span>
+  <span class="na">dnsNames</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="s">weather.apps.ocp.stackhack.ca</span>
+  <span class="na">issuerRef</span><span class="pi">:</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">venafi-cloud-issuer</span>
+</code></pre></div></div>
+
+<p>Apply the Certificate configuration:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> certificate.yaml <span class="nt">-n</span> weather
+</code></pre></div></div>
+
+<p>Once the certificate is created, it should automatically generate the secret containing the certificate:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl get secrets <span class="nt">-n</span> weather | <span class="nb">grep </span>weather
+</code></pre></div></div>
+
+<p>Example output:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>weather-tls          kubernetes.io/tls          3          5s
+</code></pre></div></div>
+
+<p>If you’ve made it thus far, everything is good to go to inject this secret into the Route.</p>
+
+<h2 id="create-the-route">Create the Route</h2>
+
+<p>Finally, let’s create the Route to automatically inject the TLS cert from the secret. Note the annotations here. This is where <code class="language-plaintext highlighter-rouge">cert-utils-operator</code> comes into play to inject the secret into the Route. This will not work without these annotations on OpenShift Routes.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">apiVersion</span><span class="pi">:</span> <span class="s">route.openshift.io/v1</span>
+<span class="na">kind</span><span class="pi">:</span> <span class="s">Route</span>
+<span class="na">metadata</span><span class="pi">:</span>
+  <span class="na">annotations</span><span class="pi">:</span>
+    <span class="na">cert-utils-operator.redhat-cop.io/certs-from-secret</span><span class="pi">:</span> <span class="s">weather-tls</span>
+    <span class="na">cert-utils-operator.redhat-cop.io/inject-CA</span><span class="pi">:</span> <span class="s2">"</span><span class="s">false"</span>
+  <span class="na">labels</span><span class="pi">:</span>
+    <span class="na">app</span><span class="pi">:</span> <span class="s">weather-app</span>
+    <span class="na">app.kubernetes.io/component</span><span class="pi">:</span> <span class="s">weather-app</span>
+    <span class="na">app.kubernetes.io/instance</span><span class="pi">:</span> <span class="s">weather-app</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">weather</span>
+<span class="na">spec</span><span class="pi">:</span>
+  <span class="na">host</span><span class="pi">:</span> <span class="s">weather.apps.ocp.stackhack.ca</span>
+  <span class="na">port</span><span class="pi">:</span>
+    <span class="na">targetPort</span><span class="pi">:</span> <span class="s">8080-tcp</span>
+  <span class="na">tls</span><span class="pi">:</span>
+    <span class="na">insecureEdgeTerminationPolicy</span><span class="pi">:</span> <span class="s">None</span>
+    <span class="na">termination</span><span class="pi">:</span> <span class="s">edge</span>
+  <span class="na">to</span><span class="pi">:</span>
+    <span class="na">kind</span><span class="pi">:</span> <span class="s">Service</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s">weather-app</span>
+    <span class="na">weight</span><span class="pi">:</span> <span class="m">100</span>
+  <span class="na">wildcardPolicy</span><span class="pi">:</span> <span class="s">None</span>
+</code></pre></div></div>
+
+<p>Apply the Route configuration:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl apply <span class="nt">-f</span> route.yaml <span class="nt">-n</span> weather
+</code></pre></div></div>
+
+<h2 id="verify-the-certificate">Verify the Certificate</h2>
+
+<p>Navigate to the URL and check out the cert.</p>
+
+<p>Expand the cert to make sure it’s the right CA.</p>
+
+<p>Let me know if there are any questions!</p>
+
+<p>The code used in the blog is available in this repo.</p>]]></content><author><name></name></author><summary type="html"><![CDATA[]]></summary><media:thumbnail xmlns:media="http://search.yahoo.com/mrss/" url="http://localhost:4000/images/certificate.jpg" /><media:content medium="image" url="http://localhost:4000/images/certificate.jpg" xmlns:media="http://search.yahoo.com/mrss/" /></entry></feed>
