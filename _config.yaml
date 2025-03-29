@@ -1,5 +1,5 @@
 title: StackHack
-description: A blog about Cloud, DevOps, Automation, and Kubernetes
+description: Cloud, DevOps, Automation, and Kubernetes
 baseurl: ""
 url: "https://stackhack.ca"
 theme: minima
