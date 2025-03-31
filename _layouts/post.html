@@ -137,7 +137,12 @@
 
     <!-- Footer -->
     <footer class="text-center py-3 mt-5">
-        © 2025 by StackHack Inc.
+        © <span id="current-year">2025</span> by StackHack Inc.
     </footer>
+
+    <!-- JavaScript to dynamically update the year -->
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>
